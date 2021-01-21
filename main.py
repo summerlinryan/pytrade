@@ -2,7 +2,7 @@ import sys
 
 from dotenv import load_dotenv
 
-from assets import Asset, TimeFrame
+from clients import AssetClient
 
 
 def main():
@@ -12,12 +12,12 @@ def main():
     if '--live' in sys.argv:
         load_dotenv('env/live.env')
 
-    asset = Asset('TSLA')
-    chart = asset.get_chart(TimeFrame.DAILY)
-
-    print('TSLA')
-    print(f'Change: {chart.last_percent_change:.2%}')
-    print(f'Last bar is green: {chart.bars[-1].is_green}')
+    asset_client = AssetClient()
+    assets = asset_client.get_available_assets()
+    charts = asset_client.get_charts([asset.symbol for asset in assets])
+    charts.sort(key=lambda c: c.last_percent_change or 0)
+    for chart in charts:
+        print(str(chart))
 
 
 if __name__ == '__main__':

@@ -1,8 +1,5 @@
 from enum import Enum
-from typing import List
-
-import alpaca_trade_api
-import alpaca_trade_api.entity
+from typing import List, Optional
 
 
 class TimeFrame(Enum):
@@ -13,57 +10,94 @@ class TimeFrame(Enum):
 
 
 class Bar:
-    open: float
-    high: float
-    low: float
-    close: float
-    volume: float
-    time: int
+    _open: float
+    _high: float
+    _low: float
+    _close: float
+    _volume: float
+    _time: int
 
     def __init__(self, bar):
-        self.open = bar.o
-        self.high = bar.h
-        self.low = bar.l
-        self.close = bar.c
-        self.volume = bar.v
-        self.time = bar.t
+        self._open = bar.o
+        self._high = bar.h
+        self._low = bar.l
+        self._close = bar.c
+        self._volume = bar.v
+        self._time = bar.t
+
+    @property
+    def open(self):
+        return self._open
+
+    @property
+    def high(self):
+        return self._high
+
+    @property
+    def low(self):
+        return self._low
+
+    @property
+    def close(self):
+        return self._close
+
+    @property
+    def volume(self):
+        return self._volume
+
+    @property
+    def time(self):
+        return self._time
 
     @property
     def is_green(self):
-        return self.close > self.open
+        return self._close > self._open
 
     @property
     def is_red(self):
-        return self.close < self.open
-
-
-class Asset:
-    api: alpaca_trade_api.REST
-    asset: alpaca_trade_api.entity.Asset
-
-    def __init__(self, symbol: str):
-        self.api = alpaca_trade_api.REST()
-        self.asset = self.api.get_asset(symbol)
-
-    def get_chart(self, time_frame: TimeFrame):
-        bars = [Bar(bar) for bar in (self.api.get_barset(
-            symbols=[self.asset.symbol],
-            timeframe=time_frame.value,
-        )[self.asset.symbol])]
-
-        return Chart(bars)
-
-    @property
-    def symbol(self):
-        return self.asset.symbol
+        return self._close < self._open
 
 
 class Chart:
-    bars: List[Bar]
+    _symbol: str
+    _time_frame: TimeFrame
+    _bars: List[Bar]
 
-    def __init__(self, bars: List[Bar]):
-        self.bars = bars
+    def __init__(self, symbol: str, time_frame: TimeFrame, bars: List[Bar]):
+        self._symbol = symbol
+        self._time_frame = time_frame
+        self._bars = bars
 
     @property
-    def last_percent_change(self) -> float:
-        return (self.bars[-1].close - self.bars[-2].close) / self.bars[-2].close
+    def symbol(self):
+        return self._symbol
+
+    @property
+    def time_frame(self):
+        return self._time_frame
+
+    @property
+    def bars(self):
+        return self._bars
+
+    @property
+    def last_percent_change(self) -> Optional[float]:
+        return (self.bars[-1].close - self.bars[-2].close) / self.bars[-2].close if len(self._bars) >= 2 else None
+
+    def __str__(self):
+        change = "N/A" if not self.last_percent_change else f'{self.last_percent_change:.2%}'
+        return f'{self.symbol} ({self.time_frame}) Last Change: {change}'
+
+
+class Asset:
+    symbol: str
+    exchange: str
+    shortable: bool
+
+    def __init__(self, asset):
+        self.symbol = asset.symbol
+        self.exchange = asset.exchange
+        self.shortable = asset.shortable and asset.easy_to_borrow
+
+    def __repr__(self):
+        return f'Asset({self.symbol}, {self.exchange})'
