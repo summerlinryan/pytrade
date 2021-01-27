@@ -17,16 +17,17 @@ class AssetClient:
         return [Asset(asset) for asset in self._api.list_assets()
                 if asset.status == 'active' and asset.tradable]
 
-    def get_charts(self, symbols: List[str], time_frame: Optional[TimeFrame] = TimeFrame.DAILY) -> List[Chart]:
+    def get_charts(self, assets: List[Asset], time_frame: Optional[TimeFrame] = TimeFrame.DAILY) -> List[Chart]:
         charts = []
-        max_symbols_per_request = 200
+        max_assets_per_request = 200
 
-        for i, symbols_group in enumerate(partition(symbols, max_symbols_per_request)):
-            barsets = self._api.get_barset(symbols_group, time_frame.value)
-            for symbol in symbols_group:
-                bars = [Bar(bar) for bar in barsets[symbol]]
-                charts.append(Chart(symbol, time_frame, bars))
+        for i, assets_partition in enumerate(partition(assets, max_assets_per_request)):
+            barsets = self._api.get_barset([asset.symbol for asset in assets_partition], time_frame.value)
 
-            print(f'Processed symbol partition {i + 1}')
+            for asset in assets_partition:
+                bars = [Bar(bar) for bar in barsets[asset.symbol]]
+                charts.append(Chart(asset, time_frame, bars))
+
+            print(f'Processed asset partition {i + 1}')
 
         return charts

@@ -14,7 +14,7 @@ def main():
 
     asset_client = AssetClient()
     assets = asset_client.get_available_assets()
-    charts = asset_client.get_charts([asset.symbol for asset in assets])
+    charts = asset_client.get_charts(assets)
     charts.sort(key=lambda c: c.last_percent_change or 0)
     for chart in charts:
         print(str(chart))

@@ -9,6 +9,32 @@ class TimeFrame(Enum):
     DAILY = '1D'
 
 
+class Asset:
+    _symbol: str
+    _exchange: str
+    _shortable: bool
+
+    def __init__(self, asset):
+        self._symbol = asset.symbol
+        self._exchange = asset.exchange
+        self._shortable = asset.shortable and asset.easy_to_borrow
+
+    def __repr__(self):
+        return f'Asset({self._symbol}, {self._exchange})'
+
+    @property
+    def symbol(self):
+        return self._symbol
+
+    @property
+    def exchange(self):
+        return self._exchange
+
+    @property
+    def shortable(self):
+        return self._shortable
+
+
 class Bar:
     _open: float
     _high: float
@@ -26,58 +52,58 @@ class Bar:
         self._time = bar.t
 
     @property
-    def open(self):
+    def open(self) -> float:
         return self._open
 
     @property
-    def high(self):
+    def high(self) -> float:
         return self._high
 
     @property
-    def low(self):
+    def low(self) -> float:
         return self._low
 
     @property
-    def close(self):
+    def close(self) -> float:
         return self._close
 
     @property
-    def volume(self):
+    def volume(self) -> float:
         return self._volume
 
     @property
-    def time(self):
+    def time(self) -> int:
         return self._time
 
     @property
-    def is_green(self):
+    def is_green(self) -> bool:
         return self._close > self._open
 
     @property
-    def is_red(self):
+    def is_red(self) -> bool:
         return self._close < self._open
 
 
 class Chart:
-    _symbol: str
+    _asset: Asset
     _time_frame: TimeFrame
     _bars: List[Bar]
 
-    def __init__(self, symbol: str, time_frame: TimeFrame, bars: List[Bar]):
-        self._symbol = symbol
+    def __init__(self, asset: Asset, time_frame: TimeFrame, bars: List[Bar]):
+        self._asset = asset
         self._time_frame = time_frame
         self._bars = bars
 
     @property
-    def symbol(self):
-        return self._symbol
+    def asset(self) -> Asset:
+        return self._asset
 
     @property
-    def time_frame(self):
+    def time_frame(self) -> TimeFrame:
         return self._time_frame
 
     @property
-    def bars(self):
+    def bars(self) -> List[Bar]:
         return self._bars
 
     @property
@@ -86,18 +112,4 @@ class Chart:
 
     def __str__(self):
         change = "N/A" if not self.last_percent_change else f'{self.last_percent_change:.2%}'
-        return f'{self.symbol} ({self.time_frame}) Last Change: {change}'
-
-
-class Asset:
-    symbol: str
-    exchange: str
-    shortable: bool
-
-    def __init__(self, asset):
-        self.symbol = asset.symbol
-        self.exchange = asset.exchange
-        self.shortable = asset.shortable and asset.easy_to_borrow
-
-    def __repr__(self):
-        return f'Asset({self.symbol}, {self.exchange})'
+        return f'{self.asset.symbol} ({self.time_frame.value}) {change}'
