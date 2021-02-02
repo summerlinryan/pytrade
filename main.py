@@ -2,7 +2,7 @@ import sys
 
 from dotenv import load_dotenv
 
-from clients import AssetClient
+from assets import AssetManager
 
 
 def main():
@@ -11,7 +11,7 @@ def main():
     elif '--live' in sys.argv:
         load_dotenv('env/live.env')
 
-    asset_client = AssetClient()
+    asset_client = AssetManager()
     assets = asset_client.get_available_assets()
     charts = asset_client.get_charts(assets)
     charts.sort(key=lambda c: c.last_percent_change or 0)

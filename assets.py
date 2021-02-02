@@ -1,6 +1,10 @@
 from enum import Enum
 from typing import List, Optional
 
+import alpaca_trade_api
+
+from utilities import partition
+
 
 class TimeFrame(Enum):
     MINUTE = '1Min'
@@ -113,3 +117,36 @@ class Chart:
     def __str__(self):
         change = "N/A" if not self.last_percent_change else f'{self.last_percent_change:.2%}'
         return f'{self.asset.symbol} ({self.time_frame.value}) {change}'
+
+
+class AssetManager:
+    _api: alpaca_trade_api.REST
+
+    def __init__(self):
+        self._api = alpaca_trade_api.REST()
+
+    def get_asset(self, symbol: str) -> Asset:
+        return self._api.get_asset(symbol)
+
+    def get_available_assets(self) -> List[Asset]:
+        return [Asset(asset) for asset in self._api.list_assets()
+                if asset.status == 'active' and asset.tradable]
+
+    def get_chart(self, asset: Asset, time_frame: Optional[TimeFrame] = TimeFrame.DAILY):
+        bars = [Bar(bar) for bar in self._api.get_barset([asset.symbol], time_frame.value)[asset.symbol]]
+        return Chart(asset, time_frame, bars)
+
+    def get_charts(self, assets: List[Asset], time_frame: Optional[TimeFrame] = TimeFrame.DAILY) -> List[Chart]:
+        charts = []
+        max_assets_per_request = 200
+
+        for i, assets_partition in enumerate(partition(assets, max_assets_per_request)):
+            barsets = self._api.get_barset([asset.symbol for asset in assets_partition], time_frame.value)
+
+            for asset in assets_partition:
+                bars = [Bar(bar) for bar in barsets[asset.symbol]]
+                charts.append(Chart(asset, time_frame, bars))
+
+            print(f'Processed asset partition {i + 1}')
+
+        return charts
