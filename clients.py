@@ -13,9 +13,16 @@ class AssetClient:
     def __init__(self):
         self._api = alpaca_trade_api.REST()
 
+    def get_asset(self, symbol: str) -> Asset:
+        return self._api.get_asset(symbol)
+
     def get_available_assets(self) -> List[Asset]:
         return [Asset(asset) for asset in self._api.list_assets()
                 if asset.status == 'active' and asset.tradable]
+
+    def get_chart(self, asset: Asset, time_frame: Optional[TimeFrame] = TimeFrame.DAILY):
+        bars = [Bar(bar) for bar in self._api.get_barset([asset.symbol], time_frame.value)[asset.symbol]]
+        return Chart(asset, time_frame, bars)
 
     def get_charts(self, assets: List[Asset], time_frame: Optional[TimeFrame] = TimeFrame.DAILY) -> List[Chart]:
         charts = []

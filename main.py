@@ -8,8 +8,7 @@ from clients import AssetClient
 def main():
     if '--paper' in sys.argv:
         load_dotenv('env/paper.env')
-
-    if '--live' in sys.argv:
+    elif '--live' in sys.argv:
         load_dotenv('env/live.env')
 
     asset_client = AssetClient()
